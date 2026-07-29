@@ -1,0 +1,247 @@
+{
+  "version": 1,
+  "settings": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "transitionMs": 1000,
+    "imageMs": 4000,
+    "audioSampleRate": 48000,
+    "videoEncoder": "auto"
+  },
+  "jobs": [
+    {
+      "id": "01main1000_conference-kickoff",
+      "segments": [
+        {
+          "type": "image",
+          "src": "../data/talk-cards/01main1000_conference-kickoff.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        },
+        {
+          "type": "chunkedVideo",
+          "src": "../data/raw/main/day 1/toronto_01main_100431_0000.mp4",
+          "in": "00:09:50.620",
+          "out": "00:25:10.599",
+          "transcribe": true,
+          "overlay": "../data/assets/sponsor-overlay.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        }
+      ]
+    },
+    {
+      "id": "01main1030_cisa",
+      "segments": [
+        {
+          "type": "image",
+          "src": "../data/talk-cards/01main1030_cisa.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        },
+        {
+          "type": "chunkedVideo",
+          "src": "../data/raw/main/day 1/toronto_01main_100431_0000.mp4",
+          "in": "00:27:40.482",
+          "out": "01:08:20.407",
+          "transcribe": true,
+          "overlay": "../data/assets/sponsor-overlay.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        }
+      ]
+    },
+    {
+      "id": "01main1115_script-restoration-making-bitcoin-programmable-again",
+      "segments": [
+        {
+          "type": "image",
+          "src": "../data/talk-cards/01main1115_script-restoration-making-bitcoin-programmable-again.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        },
+        {
+          "type": "chunkedVideo",
+          "src": "../data/raw/main/day 1/toronto_01main_100431_0000.mp4",
+          "in": "01:10:32.560",
+          "out": "01:55:04.117",
+          "transcribe": true,
+          "overlay": "../data/assets/sponsor-overlay.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        }
+      ]
+    },
+    {
+      "id": "01main1300_different-layers-different-rules",
+      "segments": [
+        {
+          "type": "image",
+          "src": "../data/talk-cards/01main1300_different-layers-different-rules.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        },
+        {
+          "type": "chunkedVideo",
+          "src": "../data/raw/main/day 1/toronto_01main_130008_0000.mp4",
+          "in": "00:05:02.536",
+          "out": "00:05:28.428",
+          "transcribe": true,
+          "overlay": "../data/assets/sponsor-overlay.png"
+        },
+        {
+          "type": "chunkedVideo",
+          "src": "../data/raw/main/day 1/toronto_01main_130008_0000.mp4",
+          "in": "00:05:54.354",
+          "out": "00:36:08.912",
+          "transcribe": true,
+          "overlay": "../data/assets/sponsor-overlay.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        }
+      ]
+    },
+    {
+      "id": "01main1330_black-box-justice-what-bitcoin-developers-need-to-know-about-how-the-u-s-government-prosecutes-the-blockchain",
+      "segments": [
+        {
+          "type": "image",
+          "src": "../data/talk-cards/01main1330_black-box-justice-what-bitcoin-developers-need-to-know-about-how-the-u-s-government-prosecutes-the-blockchain.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        },
+        {
+          "type": "chunkedVideo",
+          "src": "../data/raw/main/day 1/toronto_01main_130008_0000.mp4",
+          "in": "00:39:48.431",
+          "out": "01:28:49.946",
+          "transcribe": true,
+          "overlay": "../data/assets/sponsor-overlay.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        }
+      ]
+    },
+    {
+      "id": "01main1500_building-consensus-kickoff",
+      "segments": [
+        {
+          "type": "image",
+          "src": "../data/talk-cards/01main1500_building-consensus-kickoff.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        },
+        {
+          "type": "chunkedVideo",
+          "src": "../data/raw/main/day 1/toronto_01main_150947_0000.mp4",
+          "in": "00:03:29.576",
+          "out": "00:26:51.433",
+          "transcribe": true,
+          "overlay": "../data/assets/sponsor-overlay.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        }
+      ]
+    },
+    {
+      "id": "01talks1115_authenticated-input-a-challenge-for-bridges",
+      "segments": [
+        {
+          "type": "image",
+          "src": "../data/talk-cards/01talks1115_authenticated-input-a-challenge-for-bridges.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        },
+        {
+          "type": "video",
+          "src": "../data/raw/talks/day 1/1talksMix.mp4",
+          "in": "00:07:27.247",
+          "out": "00:48:22.199",
+          "transcribe": true,
+          "overlay": "../data/assets/sponsor-overlay.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        }
+      ]
+    },
+    {
+      "id": "01talks1300_bdk-expanding-from-rust-core-to-mobile-wallets",
+      "segments": [
+        {
+          "type": "image",
+          "src": "../data/talk-cards/01talks1300_bdk-expanding-from-rust-core-to-mobile-wallets.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        },
+        {
+          "type": "video",
+          "src": "../data/raw/talks/day 1/1talksMix.mp4",
+          "in": "01:51:27.681",
+          "out": "02:19:12.477",
+          "transcribe": true,
+          "overlay": "../data/assets/sponsor-overlay.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        }
+      ]
+    },
+    {
+      "id": "01talks1330_bitcoin-validation-without-a-node-a-practical-introduction-to-libbitcoinkernel",
+      "segments": [
+        {
+          "type": "image",
+          "src": "../data/talk-cards/01talks1330_bitcoin-validation-without-a-node-a-practical-introduction-to-libbitcoinkernel.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        },
+        {
+          "type": "video",
+          "src": "../data/raw/talks/day 1/1talksMix.mp4",
+          "in": "02:27:04.616",
+          "out": "03:12:20.329",
+          "transcribe": true,
+          "overlay": "../data/assets/sponsor-overlay.png"
+        },
+        {
+          "type": "video",
+          "src": "../data/assets/sponsor-short.mp4"
+        }
+      ]
+    }
+  ]
+}
