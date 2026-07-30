@@ -108,3 +108,66 @@ def test_real_chunked_render_crosses_file_boundary(tmp_path: Path) -> None:
     concat = output_dir / ".work" / "chunks" / "segment-000.ffconcat"
     assert "talk_0000.mp4" in concat.read_text()
     assert "talk_0001.mp4" in concat.read_text()
+
+
+@pytest.mark.skipif(not shutil.which("ffmpeg") or not shutil.which("ffprobe"), reason="FFmpeg unavailable")
+def test_short_source_audio_does_not_accumulate_across_transitions(tmp_path: Path) -> None:
+    video = tmp_path / "short-audio.mp4"
+    subprocess.run([
+        "ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i",
+        "color=blue:size=96x54:rate=10:duration=1", "-f", "lavfi", "-i",
+        "sine=frequency=440:sample_rate=48000:duration=0.8",
+        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", str(video),
+    ], check=True)
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps({
+        "version": 1,
+        "settings": {"width": 96, "height": 54, "fps": 10, "transitionMs": 200,
+                     "audioSampleRate": 48000, "videoEncoder": "software"},
+        "jobs": [{"id": "short-audio", "segments": [
+            {"type": "video", "src": video.name},
+            {"type": "video", "src": video.name},
+            {"type": "video", "src": video.name},
+        ]}],
+    }))
+    output_dir = tmp_path / "output"
+    assert main(["render", str(manifest), "--output", str(output_dir), "--overwrite"]) == 0
+    output = output_dir / "short-audio.mp4"
+    durations = subprocess.run([
+        "ffprobe", "-v", "error", "-show_entries", "stream=codec_type,duration",
+        "-of", "json", str(output),
+    ], check=True, capture_output=True, text=True)
+    streams = json.loads(durations.stdout)["streams"]
+    by_type = {stream["codec_type"]: float(stream["duration"]) for stream in streams}
+    assert by_type["video"] == pytest.approx(2.6, abs=0.11)
+    assert by_type["audio"] == pytest.approx(2.6, abs=0.03)
+
+
+@pytest.mark.skipif(not shutil.which("ffmpeg") or not shutil.which("ffprobe"), reason="FFmpeg unavailable")
+def test_chunk_timestamp_gaps_do_not_accumulate_across_transitions(tmp_path: Path) -> None:
+    for index in range(2):
+        subprocess.run([
+            "ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i",
+            "color=blue:size=96x54:rate=10:duration=1", "-f", "lavfi", "-i",
+            "sine=frequency=440:sample_rate=48000:duration=0.8",
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac",
+            str(tmp_path / f"talk_{index:04d}.mp4"),
+        ], check=True)
+    manifest = tmp_path / "manifest.json"
+    segment = {"type": "chunkedVideo", "src": "talk_0000.mp4"}
+    manifest.write_text(json.dumps({
+        "version": 1,
+        "settings": {"width": 96, "height": 54, "fps": 10, "transitionMs": 200,
+                     "audioSampleRate": 48000, "videoEncoder": "software"},
+        "jobs": [{"id": "timestamp-gaps", "segments": [segment, segment, segment]}],
+    }))
+    output_dir = tmp_path / "output"
+    assert main(["render", str(manifest), "--output", str(output_dir), "--overwrite"]) == 0
+    durations = subprocess.run([
+        "ffprobe", "-v", "error", "-show_entries", "stream=codec_type,duration",
+        "-of", "json", str(output_dir / "timestamp-gaps.mp4"),
+    ], check=True, capture_output=True, text=True)
+    streams = json.loads(durations.stdout)["streams"]
+    by_type = {stream["codec_type"]: float(stream["duration"]) for stream in streams}
+    assert by_type["video"] == pytest.approx(5.6, abs=0.11)
+    assert by_type["audio"] == pytest.approx(by_type["video"], abs=0.03)

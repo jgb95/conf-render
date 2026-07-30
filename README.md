@@ -182,6 +182,29 @@ the original video audio, not replacement or mixed audio.
 and otherwise libx264. Adjust quality with `softwareCrf`, `softwarePreset`,
 `nvencCq`, or `videoBitrate`.
 
+### A/V synchronization
+
+Rendered audio is normalized to a continuous sample clock before segment
+crossfades. This is especially important for long jobs made from chunked camera
+recordings: concatenated AAC streams can contain timestamp gaps even when each
+file appears valid. FFmpeg's `acrossfade` combines actual samples rather than
+preserving those empty timestamp intervals, so untreated gaps make each later
+segment begin slightly early and can accumulate into noticeable A/V drift over
+several hours.
+
+The filter graph deliberately uses asynchronous audio resampling to materialize
+timestamp gaps, then pads and trims every audio segment to its planned duration.
+Do not replace this with plain resampling or remove the exact-duration padding
+without verifying transition-chain synchronization. The regression
+`test_chunk_timestamp_gaps_do_not_accumulate_across_transitions` covers this
+failure mode.
+
+When investigating sync, inspect the generated `plan.json`,
+`filter-complex.txt`, and `ffmpeg-command.txt` in the job's work directory. An
+output stream-duration difference can reveal missing samples, but visual checks
+near the beginning and end are still useful because normal video-frame and AAC
+packet quantization can produce small endpoint differences.
+
 ## Tests
 
 ```bash

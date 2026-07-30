@@ -57,7 +57,7 @@ def test_overlay_image_is_added_as_looped_input(monkeypatch: pytest.MonkeyPatch)
 
 def test_replacement_audio_uses_input_after_visual_overlay() -> None:
     graph = build_filter_graph(make_audio_plan())
-    assert "[2:a]asetpts=PTS-STARTPTS" in graph
+    assert "[2:a]asetpts=PTS-STARTPTS,aresample=48000:async=1:first_pts=0" in graph
     assert "volume=-6dB,apad,atrim=duration=3.000[aexternal0]" in graph
     assert "[aexternal0]anull[a0]" in graph
     assert "[0:a]" not in graph
@@ -70,6 +70,15 @@ def test_mixed_audio_combines_source_or_silence(has_audio: bool) -> None:
     assert expected_source in graph
     assert "[asource0]volume=-3dB[amixsource0]" in graph
     assert "[amixsource0][aexternal0]amix=inputs=2:duration=first:normalize=0[a0]" in graph
+
+
+def test_source_audio_is_padded_to_exact_manifest_duration() -> None:
+    graph = build_filter_graph(make_audio_plan("mix"))
+    assert (
+        "aresample=48000:async=1:first_pts=0,"
+        "aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,"
+        "apad,atrim=duration=3.000,asetpts=PTS-STARTPTS[asource0]"
+    ) in graph
 
 
 def test_external_audio_input_uses_configured_trim(monkeypatch: pytest.MonkeyPatch) -> None:

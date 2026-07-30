@@ -113,10 +113,13 @@ def build_filter_graph(plan: RenderPlan) -> str:
         filters.append(video)
         source_audio_label = f"asource{index}" if segment.audio is not None else f"a{index}"
         if segment.has_audio and (segment.audio is None or segment.audio.mode == "mix"):
+            # Materialize timestamp gaps (notably AAC gaps at concat boundaries) as
+            # samples before acrossfade, which otherwise shortens audio cumulatively.
             filters.append(
                 f"[{source_input}:a]atrim=duration={duration},asetpts=PTS-STARTPTS,"
-                f"aresample={plan.audio_sample_rate},aformat=sample_fmts=fltp:"
-                f"sample_rates={plan.audio_sample_rate}:channel_layouts=stereo[{source_audio_label}]"
+                f"aresample={plan.audio_sample_rate}:async=1:first_pts=0,aformat=sample_fmts=fltp:"
+                f"sample_rates={plan.audio_sample_rate}:channel_layouts=stereo,"
+                f"apad,atrim=duration={duration},asetpts=PTS-STARTPTS[{source_audio_label}]"
             )
         elif segment.audio is None or segment.audio.mode == "mix":
             filters.append(
@@ -141,7 +144,8 @@ def build_filter_graph(plan: RenderPlan) -> str:
             input_index += 1
             external_label = f"aexternal{index}"
             filters.append(
-                f"[{audio_input}:a]asetpts=PTS-STARTPTS,aresample={plan.audio_sample_rate},"
+                f"[{audio_input}:a]asetpts=PTS-STARTPTS,"
+                f"aresample={plan.audio_sample_rate}:async=1:first_pts=0,"
                 f"aformat=sample_fmts=fltp:sample_rates={plan.audio_sample_rate}:channel_layouts=stereo,"
                 f"volume={segment.audio.gain_db:g}dB,apad,atrim=duration={duration}[{external_label}]"
             )

@@ -169,46 +169,6 @@
           }
         }
       ]
-    },
-    {
-      "id": "TEST",
-      "segments": [
-        {
-          "type": "video",
-          "src": "../data/assets/Countdown_No_Logo.mp4",
-          "audio": {
-            "src": "../data/assets/chain-pulse.mp3",
-            "mode": "replace",
-            "in": "00:00:02.500"
-          }
-        },
-        {
-          "type": "video",
-          "src": "../data/assets/sponsor-long.mp4",
-          "in": "00:00:44.467",
-          "audio": {
-            "src": "../data/assets/safari.mp3",
-            "mode": "replace"
-          }
-        },
-        {
-          "type": "video",
-          "src": "../data/assets/sponsor-long.mp4",
-          "audio": {
-            "src": "../data/assets/safari.mp3",
-            "mode": "replace"
-          }
-        },
-        {
-          "type": "video",
-          "src": "../data/assets/sponsor-long.mp4",
-          "audio": {
-            "src": "../data/assets/safari.mp3",
-            "mode": "replace",
-            "in": "00:04:10.000"
-          }
-        }
-      ]
     }
   ]
 }
