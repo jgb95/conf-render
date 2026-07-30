@@ -46,6 +46,15 @@ def _parser() -> argparse.ArgumentParser:
         "--only", nargs="+", metavar="JOB_ID",
         help="render only the listed job IDs",
     )
+    modes = render.add_mutually_exclusive_group()
+    modes.add_argument(
+        "--render-only", action="store_true",
+        help="render video without generating subtitles",
+    )
+    modes.add_argument(
+        "--transcribe-only", action="store_true",
+        help="generate subtitles without rendering video",
+    )
     render.add_argument("--whisper-model", default="distil-large-v3")
     render.add_argument("--whisper-language", default="en")
     render.add_argument(
@@ -197,7 +206,7 @@ def execute(args: argparse.Namespace) -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
     work_root = (args.work_dir or output_dir / ".work").resolve()
     existing = [output_dir / f"{plan.id}.mp4" for plan in plans if (output_dir / f"{plan.id}.mp4").exists()]
-    if existing and not args.overwrite:
+    if not args.transcribe_only and existing and not args.overwrite:
         raise ValueError(f"output already exists: {existing[0]} (use --overwrite)")
     _write_probes(probes, work_root)
     jobs: list[JobWork] = []
@@ -212,12 +221,21 @@ def execute(args: argparse.Namespace) -> int:
     if args.dry_run:
         logger.log(f"Dry run complete in {format_duration(time.monotonic() - command_started)}")
         return 0
-    runner = _run_sequential if args.sequential else _run_parallel
-    runner(
-        jobs, logger,
-        model_name=args.whisper_model,
-        language=args.whisper_language,
-    )
+    if args.render_only:
+        _render_lane(jobs, logger)
+    elif args.transcribe_only:
+        _transcription_lane(
+            jobs, logger,
+            model_name=args.whisper_model,
+            language=args.whisper_language,
+        )
+    else:
+        runner = _run_sequential if args.sequential else _run_parallel
+        runner(
+            jobs, logger,
+            model_name=args.whisper_model,
+            language=args.whisper_language,
+        )
     logger.log(f"All jobs complete in {format_duration(time.monotonic() - command_started)}")
     return 0
 

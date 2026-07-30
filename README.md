@@ -153,10 +153,15 @@ uv run conf-render render manifest.json --output build/ --dry-run
 uv run conf-render render manifest.json --output build/ --only talk-1 talk-2
 uv run conf-render render manifest.json --output build/ \
   --work-dir build/work --overwrite
+uv run conf-render render manifest.json --output build/ --render-only --overwrite
+uv run conf-render render manifest.json --output build/ --transcribe-only
 ```
 
 By default, rendering and transcription run in parallel serial lanes. Pass
-`--sequential` to process them one job at a time.
+`--sequential` to process them one job at a time. To repeat only one side of a
+job, use `--render-only` to skip transcription or `--transcribe-only` to skip
+video rendering. The two flags are mutually exclusive; transcription-only mode
+can run beside an existing output video without `--overwrite`.
 
 ## Transcription
 

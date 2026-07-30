@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from conf_render.cli import JobWork, _parser, _resolve_plans, _run_parallel, _transcription_lane
+from conf_render.cli import JobWork, _parser, _resolve_plans, _run_parallel, _transcription_lane, execute
 from conf_render.models import Manifest
 from conf_render.probe import MediaInfo
 from conf_render.ffmpeg import RenderArtifacts
@@ -42,6 +42,83 @@ def test_render_only_accepts_multiple_job_ids() -> None:
         "render", "manifest.json", "--output", "output", "--only", "two", "one",
     ])
     assert args.only == ["two", "one"]
+
+
+def test_render_modes_are_mutually_exclusive() -> None:
+    with pytest.raises(SystemExit):
+        _parser().parse_args([
+            "render", "manifest.json", "--output", "output",
+            "--render-only", "--transcribe-only",
+        ])
+
+
+@pytest.mark.parametrize(
+    ("mode", "expected"),
+    [
+        ("--render-only", ["render"]),
+        ("--transcribe-only", ["transcribe"]),
+        (None, ["both"]),
+    ],
+)
+def test_render_mode_selects_requested_work(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    mode: str | None,
+    expected: list[str],
+) -> None:
+    job = make_job(tmp_path, "talk")
+    calls: list[str] = []
+    monkeypatch.setattr("conf_render.cli._resolve_plans", lambda *_args, **_kwargs: (None, {}, [job.plan]))
+    monkeypatch.setattr("conf_render.cli._write_probes", lambda *_args: tmp_path / "probes.json")
+    monkeypatch.setattr("conf_render.cli.write_artifacts", lambda *_args: job.artifacts)
+    monkeypatch.setattr("conf_render.cli._render_lane", lambda *_args: calls.append("render"))
+    monkeypatch.setattr("conf_render.cli._transcription_lane", lambda *_args, **_kwargs: calls.append("transcribe"))
+    monkeypatch.setattr("conf_render.cli._run_parallel", lambda *_args, **_kwargs: calls.append("both"))
+    argv = ["render", "manifest.json", "--output", str(tmp_path / "output")]
+    if mode is not None:
+        argv.append(mode)
+
+    assert execute(_parser().parse_args(argv)) == 0
+    assert calls == expected
+
+
+def test_transcribe_only_allows_existing_video(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    job = make_job(tmp_path, "talk")
+    output_dir = tmp_path / "output"
+    output_dir.mkdir()
+    (output_dir / "talk.mp4").touch()
+    calls: list[str] = []
+    monkeypatch.setattr("conf_render.cli._resolve_plans", lambda *_args, **_kwargs: (None, {}, [job.plan]))
+    monkeypatch.setattr("conf_render.cli._write_probes", lambda *_args: tmp_path / "probes.json")
+    monkeypatch.setattr("conf_render.cli.write_artifacts", lambda *_args: job.artifacts)
+    monkeypatch.setattr(
+        "conf_render.cli._transcription_lane",
+        lambda *_args, **_kwargs: calls.append("transcribe"),
+    )
+
+    args = _parser().parse_args([
+        "render", "manifest.json", "--output", str(output_dir), "--transcribe-only",
+    ])
+    assert execute(args) == 0
+    assert calls == ["transcribe"]
+
+
+def test_render_only_rejects_existing_video_without_overwrite(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    job = make_job(tmp_path, "talk")
+    output_dir = tmp_path / "output"
+    output_dir.mkdir()
+    (output_dir / "talk.mp4").touch()
+    monkeypatch.setattr("conf_render.cli._resolve_plans", lambda *_args, **_kwargs: (None, {}, [job.plan]))
+    args = _parser().parse_args([
+        "render", "manifest.json", "--output", str(output_dir), "--render-only",
+    ])
+
+    with pytest.raises(ValueError, match="output already exists"):
+        execute(args)
 
 
 def test_resolve_plans_filters_before_probing_and_preserves_manifest_order(

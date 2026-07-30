@@ -135,7 +135,8 @@
         },
         {
           "type": "video",
-          "src": "../data/assets/insider_connor-aherne-bpi.mp4"
+          "src": "../data/assets/insider_connor-aherne-bpi.mp4",
+          "transcribe": true
         },
         {
           "type": "video",
