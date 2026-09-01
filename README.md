@@ -128,7 +128,10 @@ the joined timeline:
 }
 ```
 
-Chunks must be zero-padded, consecutive, and media-compatible.
+Chunks must end in a zero-padded integer of at least two digits immediately
+before the extension. They must also be consecutive and media-compatible.
+Separators are optional, so `camera_0001.mp4`, `camera-0001.mp4`, and
+`camera0001.mp4` are all valid sequence names.
 
 ### Notes
 

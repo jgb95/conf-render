@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-_CHUNK_NAME = re.compile(r"^(?P<prefix>.+)_(?P<number>\d{2,})(?P<extension>\.[^.]+)$")
+_CHUNK_NAME = re.compile(r"^(?P<prefix>.*?)(?P<number>\d+)(?P<extension>\.[^.]+)$")
 
 
 def discover_chunks(first: Path) -> tuple[Path, ...]:
@@ -13,7 +13,7 @@ def discover_chunks(first: Path) -> tuple[Path, ...]:
     match = _CHUNK_NAME.fullmatch(first.name)
     if match is None:
         raise ValueError(
-            f"chunked video source must match NAME_NUM.EXT with a zero-padded number: {first}"
+            f"chunked video source must end in a zero-padded number before its extension: {first}"
         )
     digits = match.group("number")
     if len(digits) < 2 or not digits.startswith("0"):
@@ -23,7 +23,7 @@ def discover_chunks(first: Path) -> tuple[Path, ...]:
     width = len(digits)
     start = int(digits)
     sibling_pattern = re.compile(
-        rf"^{re.escape(prefix)}_(?P<number>\d{{{width}}}){re.escape(extension)}$"
+        rf"^{re.escape(prefix)}(?P<number>\d{{{width}}}){re.escape(extension)}$"
     )
     numbered: dict[int, Path] = {}
     for sibling in first.parent.iterdir():
@@ -36,6 +36,6 @@ def discover_chunks(first: Path) -> tuple[Path, ...]:
     expected = list(range(start, later[-1] + 1))
     missing = [number for number in expected if number not in numbered]
     if missing:
-        names = ", ".join(f"{prefix}_{number:0{width}d}{extension}" for number in missing)
+        names = ", ".join(f"{prefix}{number:0{width}d}{extension}" for number in missing)
         raise ValueError(f"chunk sequence has missing file(s): {names}")
     return tuple(numbered[number] for number in expected)
