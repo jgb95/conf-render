@@ -23,11 +23,11 @@
         },
         {
           "type": "image",
-          "src": "../data/talk-cards/01main1000_conference-kickoff.png"
+          "src": "../data/assets/talk-cards/01main1000_conference-kickoff.png"
         },
         {
           "type": "chunkedVideo",
-          "src": "../data/raw/main/day 1/toronto_01main_100431_0000.mp4",
+          "src": "../data/raw/mix/toronto_01main_100431_0000.mp4",
           "in": "00:09:50.620",
           "out": "00:25:10.599",
           "transcribe": true,
@@ -44,11 +44,11 @@
         },
         {
           "type": "image",
-          "src": "../data/talk-cards/01main1030_cisa.png"
+          "src": "../data/assets/talk-cards/01main1030_cisa.png"
         },
         {
           "type": "chunkedVideo",
-          "src": "../data/raw/main/day 1/toronto_01main_100431_0000.mp4",
+          "src": "../data/raw/mix/toronto_01main_100431_0000.mp4",
           "in": "00:27:40.482",
           "out": "01:08:20.407",
           "transcribe": true,
@@ -65,11 +65,11 @@
         },
         {
           "type": "image",
-          "src": "../data/talk-cards/01main1115_script-restoration-making-bitcoin-programmable-again.png"
+          "src": "../data/assets/talk-cards/01main1115_script-restoration-making-bitcoin-programmable-again.png"
         },
         {
           "type": "chunkedVideo",
-          "src": "../data/raw/main/day 1/toronto_01main_100431_0000.mp4",
+          "src": "../data/raw/mix/toronto_01main_100431_0000.mp4",
           "in": "01:10:32.560",
           "out": "01:55:04.117",
           "transcribe": true,
@@ -85,11 +85,11 @@
         },
         {
           "type": "image",
-          "src": "../data/talk-cards/01main1300_different-layers-different-rules.png"
+          "src": "../data/assets/talk-cards/01main1300_different-layers-different-rules.png"
         },
         {
           "type": "chunkedVideo",
-          "src": "../data/raw/main/day 1/toronto_01main_130008_0000.mp4",
+          "src": "../data/raw/mix/toronto_01main_130008_0000.mp4",
           "in": "00:05:02.536",
           "out": "00:05:28.428",
           "transcribe": true,
@@ -97,7 +97,7 @@
         },
         {
           "type": "chunkedVideo",
-          "src": "../data/raw/main/day 1/toronto_01main_130008_0000.mp4",
+          "src": "../data/raw/mix/toronto_01main_130008_0000.mp4",
           "in": "00:05:54.354",
           "out": "00:36:08.912",
           "transcribe": true,
@@ -114,11 +114,11 @@
         },
         {
           "type": "image",
-          "src": "../data/talk-cards/01main1330_black-box-justice-what-bitcoin-developers-need-to-know-about-how-the-u-s-government-prosecutes-the-blockchain.png"
+          "src": "../data/assets/talk-cards/01main1330_black-box-justice-what-bitcoin-developers-need-to-know-about-how-the-u-s-government-prosecutes-the-blockchain.png"
         },
         {
           "type": "chunkedVideo",
-          "src": "../data/raw/main/day 1/toronto_01main_130008_0000.mp4",
+          "src": "../data/raw/mix/toronto_01main_130008_0000.mp4",
           "in": "00:39:48.431",
           "out": "01:28:49.946",
           "transcribe": true,
@@ -149,11 +149,11 @@
         },
         {
           "type": "image",
-          "src": "../data/talk-cards/01main1500_building-consensus-kickoff.png"
+          "src": "../data/assets/talk-cards/01main1500_building-consensus-kickoff.png"
         },
         {
           "type": "chunkedVideo",
-          "src": "../data/raw/main/day 1/toronto_01main_150947_0000.mp4",
+          "src": "../data/raw/mix/toronto_01main_150947_0000.mp4",
           "in": "00:03:29.576",
           "out": "00:26:51.433",
           "transcribe": true,
