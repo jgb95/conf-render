@@ -7,7 +7,10 @@
     "transitionMs": 1000,
     "imageMs": 4000,
     "audioSampleRate": 48000,
-    "videoEncoder": "auto"
+    "videoEncoder": "auto",
+    "videoBitrate": "6800k",
+    "audioBitrate": "160k",
+    "keyframeInterval": 2
   },
   "jobs": [
     {

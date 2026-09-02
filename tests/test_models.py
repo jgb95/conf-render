@@ -18,11 +18,14 @@ def test_discriminated_segments_and_timestamp_conversion() -> None:
     assert segment.in_ms == 1500
 
 
-def test_nvenc_defaults_to_constant_quality_with_optional_bitrate() -> None:
+def test_render_settings_default_to_stream_ready_encoding() -> None:
     settings = RenderSettings()
     assert settings.nvenc_cq == 23
-    assert settings.video_bitrate is None
+    assert settings.video_bitrate == "6800k"
+    assert settings.audio_bitrate == "160k"
+    assert settings.keyframe_interval == 2
     assert RenderSettings.model_validate({"videoBitrate": "6M"}).video_bitrate == "6M"
+    assert RenderSettings.model_validate({"videoBitrate": None}).video_bitrate is None
 
 
 def test_image_duration_uses_settings_default_and_allows_override() -> None:

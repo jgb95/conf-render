@@ -69,6 +69,8 @@ class RenderPlan:
     software_crf: int
     duration_ms: int
     segments: tuple[PlannedSegment, ...]
+    audio_bitrate: str = "160k"
+    keyframe_interval: int = 2
 
     def to_dict(self) -> dict[str, object]:
         data = asdict(self)
@@ -151,4 +153,6 @@ def build_plan(job: RenderJob, settings: RenderSettings, probes: dict[Path, Medi
         software_crf=settings.software_crf,
         duration_ms=cursor_ms,
         segments=tuple(planned),
+        audio_bitrate=settings.audio_bitrate,
+        keyframe_interval=settings.keyframe_interval,
     )

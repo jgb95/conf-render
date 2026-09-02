@@ -32,7 +32,10 @@ recording:
     "height": 1080,
     "fps": 30,
     "transitionMs": 1000,
-    "imageMs": 4000
+    "imageMs": 4000,
+    "videoBitrate": "6800k",
+    "audioBitrate": "160k",
+    "keyframeInterval": 2
   },
   "jobs": [
     {
@@ -182,8 +185,18 @@ the original video audio, not replacement or mixed audio.
 
 `settings.videoEncoder` accepts `auto` (default), `software`, `videotoolbox`, or
 `nvenc`. Auto prefers VideoToolbox on macOS, NVENC where available elsewhere,
-and otherwise libx264. Adjust quality with `softwareCrf`, `softwarePreset`,
-`nvencCq`, or `videoBitrate`.
+and otherwise libx264.
+
+Outputs default to a deterministic, streaming-friendly MP4: H.264 High profile
+with yuv420p video at 30 fps and 6800 kb/s, a two-second keyframe interval,
+stereo AAC audio at 48 kHz and 160 kb/s, and faststart metadata. Rendering ends
+by probing the output and rejecting files that do not match the requested
+resolution, frame rate, and normalized H.264/AAC stream layout.
+
+Use `videoBitrate`, `audioBitrate`, and `keyframeInterval` to change those
+defaults. Set `videoBitrate` to `null` to use encoder-specific quality-based
+rate control instead; `softwareCrf` and `nvencCq` apply in that mode.
+`softwarePreset` controls libx264 speed and quality tradeoffs.
 
 ### A/V synchronization
 

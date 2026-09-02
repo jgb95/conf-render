@@ -24,6 +24,12 @@ class MediaInfo:
     height: int | None
     frame_rate: str | None
     chunks: tuple[Path, ...] = ()
+    video_codec: str | None = None
+    video_profile: str | None = None
+    pixel_format: str | None = None
+    audio_codec: str | None = None
+    audio_sample_rate: str | None = None
+    audio_channels: int | None = None
 
     def to_dict(self) -> dict[str, object]:
         value = asdict(self)
@@ -66,6 +72,16 @@ def parse_probe(payload: dict[str, Any], path: Path) -> MediaInfo:
             str(video.get("r_frame_rate") or video.get("avg_frame_rate"))
             if video and (video.get("r_frame_rate") or video.get("avg_frame_rate"))
             else None
+        ),
+        video_codec=str(video.get("codec_name")) if video and video.get("codec_name") else None,
+        video_profile=str(video.get("profile")) if video and video.get("profile") else None,
+        pixel_format=str(video.get("pix_fmt")) if video and video.get("pix_fmt") else None,
+        audio_codec=str(audios[0].get("codec_name")) if audios and audios[0].get("codec_name") else None,
+        audio_sample_rate=(
+            str(audios[0].get("sample_rate")) if audios and audios[0].get("sample_rate") else None
+        ),
+        audio_channels=(
+            int(audios[0]["channels"]) if audios and audios[0].get("channels") is not None else None
         ),
     )
 
@@ -122,4 +138,10 @@ def probe_chunked_media(
         height=reference.height,
         frame_rate=reference.frame_rate,
         chunks=chunks,
+        video_codec=reference.video_codec,
+        video_profile=reference.video_profile,
+        pixel_format=reference.pixel_format,
+        audio_codec=reference.audio_codec,
+        audio_sample_rate=reference.audio_sample_rate,
+        audio_channels=reference.audio_channels,
     )

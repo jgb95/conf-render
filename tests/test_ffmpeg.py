@@ -1,9 +1,17 @@
 import platform
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
-from conf_render.ffmpeg import _video_encoder_args, build_command, build_filter_graph, resolve_video_encoder
+from conf_render.ffmpeg import (
+    _video_encoder_args,
+    build_command,
+    build_filter_graph,
+    resolve_video_encoder,
+    verify_render_output,
+)
+from conf_render.probe import MediaInfo
 from conf_render.timeline import PlannedAudio, PlannedSegment, RenderPlan
 
 
@@ -47,7 +55,7 @@ def test_overlay_filter_uses_extra_input_before_following_segment() -> None:
 def test_overlay_image_is_added_as_looped_input(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("conf_render.ffmpeg.resolve_video_encoder", lambda requested: "libx264")
     command = build_command(
-        make_overlay_plan(), Path("output.mp4"), Path("filter.txt"), True,
+        make_overlay_plan(), Path("output.mp4"), True,
     )
     overlay_index = command.index("bug.png")
     assert command[overlay_index - 7:overlay_index + 1] == [
@@ -83,7 +91,7 @@ def test_source_audio_is_padded_to_exact_manifest_duration() -> None:
 
 def test_external_audio_input_uses_configured_trim(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("conf_render.ffmpeg.resolve_video_encoder", lambda requested: "libx264")
-    command = build_command(make_audio_plan(), Path("output.mp4"), Path("filter.txt"), True)
+    command = build_command(make_audio_plan(), Path("output.mp4"), True)
     audio_index = command.index("clean.wav")
     assert command[audio_index - 5:audio_index + 1] == [
         "-ss", "0.500", "-t", "3.000", "-i", "clean.wav",
@@ -132,6 +140,7 @@ def test_videotoolbox_uses_legacy_quality_setting(monkeypatch: pytest.MonkeyPatc
 
     assert _video_encoder_args(plan) == [
         "-c:v", "h264_videotoolbox", "-q:v", "65",
+        "-profile:v", "high", "-pix_fmt", "yuv420p",
     ]
 
 
@@ -139,7 +148,7 @@ def test_videotoolbox_uses_legacy_quality_setting(monkeypatch: pytest.MonkeyPatc
     ("bitrate", "rate_control"),
     [
         (None, ["-rc", "vbr", "-cq", "23", "-b:v", "0"]),
-        ("6M", ["-b:v", "6M"]),
+        ("6M", ["-b:v", "6M", "-minrate", "6M", "-maxrate", "6M", "-bufsize", "12M"]),
     ],
 )
 def test_nvenc_rate_control(
@@ -171,3 +180,38 @@ def test_nvenc_rate_control(
         "-c:v", "h264_nvenc", "-preset", "p4", *rate_control,
         "-profile:v", "high", "-pix_fmt", "yuv420p",
     ]
+
+
+def test_normalized_output_settings_are_applied_to_command(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("conf_render.ffmpeg.resolve_video_encoder", lambda requested: "libx264")
+    plan = make_overlay_plan()
+    plan = replace(plan, video_bitrate="6800k", audio_bitrate="160k", keyframe_interval=2)
+    command = build_command(plan, Path("output.mp4"), True)
+    assert command[command.index("-b:v"):command.index("-profile:v")] == [
+        "-b:v", "6800k", "-minrate", "6800k", "-maxrate", "6800k", "-bufsize", "13600k",
+    ]
+    assert ["-r", "30", "-g", "60", "-keyint_min", "60", "-sc_threshold", "0"] == command[
+        command.index("-r"):command.index("-c:a")
+    ]
+    assert command[command.index("-c:a"):command.index("-movflags")] == [
+        "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-ac", "2",
+    ]
+
+
+def test_render_output_verification_accepts_normalized_media() -> None:
+    plan = make_overlay_plan()
+    info = MediaInfo(
+        Path("output.mp4"), 4000, True, True, 1920, 1080, "30/1", (),
+        "h264", "High", "yuv420p", "aac", "48000", 2,
+    )
+    verify_render_output(plan, info)
+
+
+def test_render_output_verification_reports_contract_mismatch() -> None:
+    plan = make_overlay_plan()
+    info = MediaInfo(
+        Path("output.mp4"), 4000, True, True, 1280, 720, "30/1", (),
+        "h264", "Main", "yuv420p", "aac", "48000", 2,
+    )
+    with pytest.raises(RuntimeError, match="H.264 High profile, 1920x1080 resolution"):
+        verify_render_output(plan, info)

@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import json
 import platform
+import re
 import shlex
 import subprocess
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
+from fractions import Fraction
 from pathlib import Path
 
 from conf_render.progress import run_ffmpeg
+from conf_render.probe import MediaInfo, probe_media
 from conf_render.timecodes import ffmpeg_seconds
 from conf_render.timeline import RenderPlan
 
@@ -68,24 +71,65 @@ def resolve_video_encoder(requested: str, available: set[str] | None = None) -> 
 
 def _video_encoder_args(plan: RenderPlan) -> list[str]:
     encoder = resolve_video_encoder(plan.video_encoder)
+    rate_control: list[str]
+    if plan.video_bitrate is None:
+        rate_control = []
+    else:
+        buffer_size = _double_bitrate(plan.video_bitrate)
+        rate_control = [
+            "-b:v", plan.video_bitrate,
+            "-minrate", plan.video_bitrate,
+            "-maxrate", plan.video_bitrate,
+            "-bufsize", buffer_size,
+        ]
     if encoder == "libx264":
-        return [
-            "-c:v", encoder, "-preset", plan.software_preset,
-            "-crf", str(plan.software_crf), "-pix_fmt", "yuv420p",
-        ]
+        quality = ["-crf", str(plan.software_crf)] if plan.video_bitrate is None else rate_control
+        return ["-c:v", encoder, "-preset", plan.software_preset, *quality,
+                "-profile:v", "high", "-pix_fmt", "yuv420p"]
     if encoder == "h264_videotoolbox":
-        return [
-            "-c:v", encoder, "-q:v", "65",
-        ]
-    rate_control = (
-        ["-b:v", plan.video_bitrate]
-        if plan.video_bitrate is not None
-        else ["-rc", "vbr", "-cq", str(plan.nvenc_cq), "-b:v", "0"]
-    )
+        quality = ["-q:v", "65"] if plan.video_bitrate is None else rate_control
+        return ["-c:v", encoder, *quality, "-profile:v", "high", "-pix_fmt", "yuv420p"]
+    if plan.video_bitrate is None:
+        rate_control = ["-rc", "vbr", "-cq", str(plan.nvenc_cq), "-b:v", "0"]
     return [
         "-c:v", encoder, "-preset", "p4", *rate_control,
         "-profile:v", "high", "-pix_fmt", "yuv420p",
     ]
+
+
+def _double_bitrate(value: str) -> str:
+    match = re.fullmatch(r"([1-9][0-9]*)([kKmMgG]?)", value)
+    if match is None:
+        raise ValueError(f"invalid video bitrate: {value}")
+    return f"{int(match.group(1)) * 2}{match.group(2)}"
+
+
+def _normalized_output_args(plan: RenderPlan) -> list[str]:
+    gop = plan.fps * plan.keyframe_interval
+    return ["-r", str(plan.fps), "-g", str(gop), "-keyint_min", str(gop), "-sc_threshold", "0"]
+
+
+def verify_render_output(plan: RenderPlan, info: MediaInfo) -> None:
+    """Reject an output that does not satisfy conf-render's normalized contract."""
+    try:
+        frame_rate_matches = info.frame_rate is not None and Fraction(info.frame_rate) == plan.fps
+    except (ValueError, ZeroDivisionError):
+        frame_rate_matches = False
+    checks = [
+        (info.has_video, "video stream"),
+        (info.has_audio, "audio stream"),
+        (info.video_codec == "h264", "H.264 video"),
+        (info.video_profile == "High", "H.264 High profile"),
+        (info.pixel_format == "yuv420p", "yuv420p pixel format"),
+        (info.width == plan.width and info.height == plan.height, f"{plan.width}x{plan.height} resolution"),
+        (frame_rate_matches, f"{plan.fps} fps"),
+        (info.audio_codec == "aac", "AAC audio"),
+        (info.audio_sample_rate == str(plan.audio_sample_rate), f"{plan.audio_sample_rate} Hz audio"),
+        (info.audio_channels == 2, "stereo audio"),
+    ]
+    missing = [description for valid, description in checks if not valid]
+    if missing:
+        raise RuntimeError(f"rendered output failed verification ({', '.join(missing)}): {info.path}")
 
 
 def _write_concat_file(chunks: tuple[Path, ...], path: Path) -> None:
@@ -193,7 +237,6 @@ def build_filter_graph(plan: RenderPlan) -> str:
 def build_command(
     plan: RenderPlan,
     output: Path,
-    filter_script: Path,
     overwrite: bool,
     concat_files: dict[int, Path] | None = None,
 ) -> list[str]:
@@ -224,12 +267,13 @@ def build_command(
                 "-t", ffmpeg_seconds(segment.duration_ms), "-i", str(segment.audio.src),
             ])
     command.extend([
-        "-filter_complex_script", str(filter_script),
+        "-filter_complex", build_filter_graph(plan),
         "-map", "[vout]", "-map", "[aout]",
     ])
     command.extend(_video_encoder_args(plan))
     command.extend([
-        "-c:a", "aac", "-b:a", "192k", "-ar", str(plan.audio_sample_rate),
+        *_normalized_output_args(plan),
+        "-c:a", "aac", "-b:a", plan.audio_bitrate, "-ar", str(plan.audio_sample_rate), "-ac", "2",
         "-movflags", "+faststart", str(output),
     ])
     return command
@@ -249,7 +293,7 @@ def write_artifacts(plan: RenderPlan, output: Path, work_dir: Path, overwrite: b
             concat_files[segment.index] = concat_file
     filter_script.write_text(build_filter_graph(plan), encoding="utf-8")
     plan_file.write_text(json.dumps(plan.to_dict(), indent=2) + "\n", encoding="utf-8")
-    command = build_command(plan, output, filter_script, overwrite, concat_files)
+    command = build_command(plan, output, overwrite, concat_files)
     command_file.write_text(shlex.join(command) + "\n", encoding="utf-8")
     return RenderArtifacts(tuple(command), filter_script, command_file, plan_file, concat_files)
 
@@ -262,3 +306,6 @@ def render(
 ) -> None:
     """Execute a previously materialized render command."""
     run_ffmpeg(list(artifacts.command), plan.duration_ms, report=report)
+    report(f"Verifying {artifacts.command[-1]}")
+    info = probe_media(Path(artifacts.command[-1]))
+    verify_render_output(plan, info)

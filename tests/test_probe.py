@@ -7,16 +7,19 @@ def test_parse_probe_metadata() -> None:
     info = parse_probe({
         "streams": [
             {
-                "codec_type": "video", "width": 1920, "height": 1080,
+                "codec_type": "video", "codec_name": "h264", "profile": "High",
+                "pix_fmt": "yuv420p", "width": 1920, "height": 1080,
                 "r_frame_rate": "30000/1001", "avg_frame_rate": "2997/100",
             },
-            {"codec_type": "audio"},
+            {"codec_type": "audio", "codec_name": "aac", "sample_rate": "48000", "channels": 2},
         ],
         "format": {"duration": "12.3456"},
     }, Path("talk.mp4"))
     assert info.duration_ms == 12_346
     assert info.has_video and info.has_audio
     assert info.frame_rate == "30000/1001"
+    assert (info.video_codec, info.video_profile, info.pixel_format) == ("h264", "High", "yuv420p")
+    assert (info.audio_codec, info.audio_sample_rate, info.audio_channels) == ("aac", "48000", 2)
 
 
 def test_still_image_can_have_no_duration() -> None:
