@@ -10,11 +10,11 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
 dependencies = [
-    "faster-whisper>=1.1",
     "pydantic>=2.8,<3",
 ]
 
 [project.optional-dependencies]
+speech = ["faster-whisper>=1.1"]
 dev = ["pytest>=8"]
 
 [project.scripts]

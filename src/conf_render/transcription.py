@@ -144,8 +144,8 @@ def load_whisper_runtime(model_name: str, progress: Progress) -> WhisperRuntime:
         from faster_whisper import BatchedInferencePipeline, WhisperModel
     except ImportError as exc:
         raise RuntimeError(
-            "faster-whisper is unavailable; reinstall conf-render to restore "
-            "its required transcription dependencies"
+            "Transcription needs the optional speech dependencies. "
+            "Run uv sync --extra speech, or pip install 'conf-render[speech]'."
         ) from exc
 
     cuda_devices = ctranslate2.get_cuda_device_count()

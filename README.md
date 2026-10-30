@@ -14,6 +14,16 @@ uv sync
 uv run conf-render --help
 ```
 
+The default install supports validation, planning and video rendering without
+installing a speech inference runtime. For transcription, install the optional
+extra before using `transcribe: true` or `--transcribe-only`:
+
+```bash
+uv sync --extra speech
+```
+
+For a package installation, use `pip install 'conf-render[speech]'`.
+
 ## How manifests work
 
 A manifest defines shared settings and one or more output jobs. These examples
