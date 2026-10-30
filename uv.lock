@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.12"
 
 [[package]]
@@ -85,7 +85,6 @@ name = "conf-render"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "faster-whisper" },
     { name = "pydantic" },
 ]
 
@@ -93,14 +92,17 @@ dependencies = [
 dev = [
     { name = "pytest" },
 ]
+speech = [
+    { name = "faster-whisper" },
+]
 
 [package.metadata]
 requires-dist = [
-    { name = "faster-whisper", specifier = ">=1.1" },
+    { name = "faster-whisper", marker = "extra == 'speech'", specifier = ">=1.1" },
     { name = "pydantic", specifier = ">=2.8,<3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
 ]
-provides-extras = ["dev"]
+provides-extras = ["speech", "dev"]
 
 [[package]]
 name = "ctranslate2"
